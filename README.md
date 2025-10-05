@@ -3,7 +3,7 @@
 テスト用リポジトリとして、CI内で軽量RAGパイプラインを構築・検証するための最小構成を用意しています。
 
 ## 構成
-- `docs/`: Sentence-TransformersとFAISSでベクトル化するテスト用ドキュメント。
+- `docs/`: Sentence-TransformersとFAISSでベクトル化するテスト用ドキュメント（CI動作に合わせたアーキテクチャ説明や、共有ToDoアプリの設計例を含む）。
 - `scripts/build_rag_index.py`: Markdownをチャンク化し、FAISSインデックスとメタデータを生成するスクリプト。既定では多言語対応の`sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2`を利用します。
 - `scripts/query_rag_index.py`: 生成済みインデックスに対してクエリを投げるためのCLI。同じ多言語モデルを用いて検索クエリを埋め込み化します。
 - `.github/workflows/rag-ci.yml`: GitHub Actionsでの検証ワークフロー。依存関係のインストール、インデックス生成、サンプルクエリの実行、アーティファクトのアップロードを行います。
