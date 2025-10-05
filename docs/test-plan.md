@@ -4,7 +4,7 @@
 
 ## Test Items
 1. **依存関係のインストール**
-   - `requirements.txt`からfaiss-cpuおよびsentence-transformersが正しくインストールできること。
+   - `numpy<2`が先にインストールされ、`requirements.txt`からfaiss-cpuおよびsentence-transformersが正しくインストールできること。
 2. **インデックス生成**
    - `scripts/build_rag_index.py`がMarkdownをチャンク化し、FAISSインデックスとメタデータJSONを生成すること。
    - 生成されたメタデータにはファイルパス、チャンクID、テキストが含まれること。

@@ -15,7 +15,7 @@
 5. **Query CLI**: Pull Requestレビュー時に「この仕様はどこ？」といった問いを投げられるよう、シンプルな検索CLIを用意します。
 
 ## CI Flow
-1. Python依存をインストールします。
+1. Python依存をインストールします（FAISSホイールの互換性を保つため、NumPyは`<2`に固定します）。
 2. `scripts/build_rag_index.py`を実行してインデックスを生成します（`rag/index.faiss`と`rag/docstore.json`が既に存在する場合はスキップされます）。
 3. `scripts/query_rag_index.py`で代表的な質問を実行し、結果をCIログに表示します。
 4. 生成物はアーティファクトとして保存するか、必要に応じてPull Requestコメントへ活用します。

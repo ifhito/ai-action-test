@@ -13,12 +13,15 @@
 ```bash
 python -m venv .venv
 source .venv/bin/activate
+pip install "numpy<2"
 pip install -r requirements.txt
 python scripts/build_rag_index.py --docs docs
 python scripts/query_rag_index.py --query "CI Flow"
 ```
 
 これにより`rag/index.faiss`と`rag/docstore.json`が生成され、クエリ結果が出力されます。
+
+> **Note:** GitHub Actionsホストでは既定でNumPy 2.xが導入されるため、FAISSホイールと互換性を保つには`numpy<2`を事前にインストールしてから残りの依存関係を入れる必要があります。
 
 ## 事前生成済みインデックスの参照
 
