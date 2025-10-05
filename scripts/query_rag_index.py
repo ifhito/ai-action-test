@@ -21,7 +21,10 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="Query docs RAG index")
     parser.add_argument("--index-path", type=Path, default=Path("rag/index.faiss"))
     parser.add_argument("--metadata-path", type=Path, default=Path("rag/docstore.json"))
-    parser.add_argument("--model", default="sentence-transformers/all-MiniLM-L6-v2")
+    parser.add_argument(
+        "--model",
+        default="sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2",
+    )
     parser.add_argument("--query", required=True)
     parser.add_argument("--top-k", type=int, default=3)
     args = parser.parse_args()

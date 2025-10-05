@@ -78,7 +78,9 @@ def main() -> None:
         "--metadata-path", type=Path, default=Path("rag/docstore.json"), help="Path to save chunk metadata"
     )
     parser.add_argument(
-        "--model", default="sentence-transformers/all-MiniLM-L6-v2", help="Sentence-Transformers model name"
+        "--model",
+        default="sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2",
+        help="Sentence-Transformers model name",
     )
     parser.add_argument("--batch-size", type=int, default=32, help="Embedding batch size")
     args = parser.parse_args()

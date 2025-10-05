@@ -50,8 +50,10 @@ jobs:
             python scripts/build_rag_index.py --docs docs --index-path rag/index.faiss --metadata-path rag/docstore.json
           fi
 
-      - name: Run sample query
-        run: python scripts/query_rag_index.py --index-path rag/index.faiss --metadata-path rag/docstore.json --query "CI Flow" --top-k 2
+      - name: Run sample queries
+        run: |
+          python scripts/query_rag_index.py --index-path rag/index.faiss --metadata-path rag/docstore.json --query "CI Flow" --top-k 3
+          python scripts/query_rag_index.py --index-path rag/index.faiss --metadata-path rag/docstore.json --query "テスト計画" --top-k 3
 
       - name: Upload RAG artifacts
         uses: actions/upload-artifact@v4

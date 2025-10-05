@@ -10,7 +10,7 @@
 ## Components
 1. **Document Collector**: `docs/`以下のMarkdownファイルを再帰的に取得します。
 2. **Chunker**: 500文字を目安に文脈を保ったまま分割し、メタデータとして元のファイルパスを保持します。
-3. **Embedder**: `sentence-transformers/all-MiniLM-L6-v2`モデルを用いて各チャンクをベクトル化します。
+3. **Embedder**: 多言語対応の`sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2`モデルを用いて各チャンクをベクトル化します。日本語クエリでも再現性を持たせるため、このモデルを既定とします。
 4. **Vector Store**: FAISSの`IndexFlatL2`を用いてベクトルを格納します。
 5. **Query CLI**: Pull Requestレビュー時に「この仕様はどこ？」といった問いを投げられるよう、シンプルな検索CLIを用意します。
 
