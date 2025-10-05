@@ -1,0 +1,12 @@
+# Python virtual environments
+.venv/
+
+# Bytecode and caches
+__pycache__/
+*.pyc
+
+# RAG artifacts
+rag/
+
+# macOS cruft
+.DS_Store
