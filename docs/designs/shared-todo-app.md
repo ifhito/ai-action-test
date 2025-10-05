@@ -1,85 +1,26 @@
-# 共有可能なToDoアプリ設計書
+# 共有可能なToDoアプリ設計書（分割版） / Shared ToDo App Design (Modular)
 
-この文書では、チームメンバーとタスクを共有しながら管理できるToDoアプリの例示的な設計を示します。軽量RAGのサンプルコンテンツとして利用できるように、要件、アーキテクチャ、データモデル、API、運用フローを整理しています。
+この設計書は複数の観点に分割され、詳細なドキュメントは`shared-todo-app/`ディレクトリ以下に格納されています。Pull RequestレビューやRAG
+検索で、必要な観点のみ迅速に参照できる構成です。
 
-## ビジョンとユースケース
-- 個人とチームの両方で利用でき、タスクの状態・担当者・期限を共有できる。
-- モバイルとWebの両方からアクセスできるレスポンシブUI。
-- コメントやメンションでコミュニケーションを補助する。
-- 外部サービス（Googleカレンダー等）との連携を想定したWebhook/ICSエクスポート。
+## クイックリンク / Quick Links
+- [プロダクトビジョンとペルソナ](shared-todo-app/vision-and-personas.md)
+- [ユースケースとシナリオ](shared-todo-app/use-cases.md)
+- [ドメイン駆動設計](shared-todo-app/domain-driven-design.md)
+- [データモデルとイベントスキーマ](shared-todo-app/data-model.md)
+- [業務フロー（フローチャート）](shared-todo-app/workflows.md)
+- [シーケンス図](shared-todo-app/sequence-diagrams.md)
+- [技術仕様（認証・API・非機能）](shared-todo-app/technical-specs.md)
+- [デプロイと運用](shared-todo-app/deployment-and-ops.md)
 
-## ユーザーロール
-| ロール | 説明 | 主な権限 |
-| --- | --- | --- |
-| Owner | ワークスペースの作成者。課金管理とメンバー管理が可能。 | 招待、権限変更、課金設定 |
-| Member | タスクを作成・編集できる一般ユーザー。 | タスクCRUD、コメント、リマインダー設定 |
-| Viewer | 参照専用ユーザー。閲覧のみ可能。 | タスク閲覧、コメント閲覧 |
+## 目的 / Purpose
+- 設計変更時に、どのコンポーネントやフローが影響を受けるかを素早く把握する。
+- CIの軽量RAG検索で、特定の質問（例: 「ゲストアクセスの認証方法は？」）に対応するドキュメントを即座に引き当てる。
+- 認証、通知、監査などの非機能要件も含めた包括的な設計資料を提供する。
 
-## 全体アーキテクチャ
-```
-React(Web) / React Native(App)
-           |
-    GraphQL API Gateway
-           |
-   ---------------------------------
-   |              |                |
- Task Service  Comment Service  Notification Service
-   |              |                |
- PostgreSQL   PostgreSQL        Redis + SES/FCM
-```
-- **GraphQL API Gateway**: BFFとして認証済みユーザーコンテキストを付与し、各サービスの集約ポイントとなる。
-- **Task Service**: タスク、リスト、ステータス管理を担当。タスクとユーザーの多対多関係を扱う。
-- **Comment Service**: コメントやメンション、変更履歴を保持。イベントソーシングで変更ログを記録。
-- **Notification Service**: リマインダーや共有更新通知をRedisベースのジョブキューで処理。
+## 変更履歴 / Changelog Snapshot
+- 2024-05: 認証ハンドシェイク、コメントモデレーションなどのフローをMermaid図で追加。
+- 2024-05: DDD観点の境界づけられたコンテキストとユビキタス言語を整理。
+- 2024-05: 技術仕様にゼロトラスト認証、SCIM、監査レポート生成手順を追加。
 
-## データモデル
-- `users` (id, name, email, locale, timezone)
-- `workspaces` (id, name, billing_plan)
-- `workspace_members` (workspace_id, user_id, role)
-- `task_lists` (id, workspace_id, name, color)
-- `tasks` (id, task_list_id, title, description, due_at, status, priority)
-- `task_assignees` (task_id, user_id)
-- `comments` (id, task_id, author_id, body, mentions, created_at)
-- `notifications` (id, user_id, channel, payload, deliver_at, delivered_at)
-
-## API設計（抜粋）
-### GraphQL Mutation: `createTask`
-- 入力: `title`, `description`, `dueDate`, `assigneeIds`, `listId`
-- ビジネスルール:
-  - 期限はユーザーのタイムゾーンで正規化。
-  - アサイン対象は同一ワークスペースメンバーに限定。
-  - 作成時にデフォルトリマインダー（期限24時間前）をNotification Serviceへ登録。
-
-### GraphQL Subscription: `taskUpdated`
-- クライアントは`taskId`または`listId`を指定してサブスクライブ。
-- 変更が発生した際、Diffを含むペイロードをPush。
-- コメント追加やステータス変更にも対応。
-
-### REST Endpoint: `POST /integrations/calendar/export`
-- ワークスペース単位で公開鍵を生成し、ICSファイルを生成。
-- タスクの期限変更が発生するとNotification Serviceが差分生成をトリガー。
-
-## 共有と同期戦略
-- WebSocketを利用した双方向同期。GraphQL SubscriptionsはApollo Federationを利用。
-- オフライン対応: モバイルアプリはIndexedDB/SQLiteへローカルキャッシュ。再接続時に差分同期APIを叩く。
-- 変更競合は楽観的ロック（`updated_at`チェック）で解決し、失敗時は最新状態をクライアントへ返す。
-
-## セキュリティと権限
-- CognitoやAuth0などのOIDCプロバイダーと連携し、JWTをGraphQL Gatewayで検証。
-- ワークスペースごとにRBACポリシーを付与。GraphQLリゾルバーで権限評価。
-- 監査ログはComment ServiceのイベントストアとCloudWatch Logsへ二重書き込み。
-
-## 非機能要件
-- SLA: 99.9%稼働。タスク作成APIのp95レイテンシ < 300ms。
-- スケーラビリティ: Notification Serviceは水平スケール可能なワーカーを提供。
-- コンプライアンス: 主要リージョン（東京、シンガポール、バージニア）でデータレジデンシを選択可能。
-
-## テスト計画の観点
-- GraphQLスキーマの自動生成テスト。
-- 各サービスのContract Test（Task⇔Notification）。
-- E2E: CypressでWeb UI、Detoxでモバイルをカバー。
-
-## 今後の拡張
-- タスクテンプレートの共有や自動生成。
-- AIによるタスク分類と優先度推定。
-- ドキュメント紐付け（Notion/Confluence連携）。
+詳細は各ドキュメントを参照してください。
