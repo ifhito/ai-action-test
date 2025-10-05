@@ -1,0 +1,58 @@
+name: lightweight-rag-ci
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'docs/**'
+      - 'scripts/**'
+      - 'requirements.txt'
+      - '.github/workflows/rag-ci.yml'
+  pull_request:
+    paths:
+      - 'docs/**'
+      - 'scripts/**'
+      - 'requirements.txt'
+      - '.github/workflows/rag-ci.yml'
+
+jobs:
+  build-and-query:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Cache pip packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+
+      - name: Install dependencies
+        run: pip install --upgrade pip && pip install -r requirements.txt
+
+      - name: Build FAISS index (if needed)
+        run: |
+          if [ -f rag/index.faiss ] && [ -f rag/docstore.json ]; then
+            echo "Prebuilt RAG index detected. Skipping build step."
+          else
+            python scripts/build_rag_index.py --docs docs --index-path rag/index.faiss --metadata-path rag/docstore.json
+          fi
+
+      - name: Run sample query
+        run: python scripts/query_rag_index.py --index-path rag/index.faiss --metadata-path rag/docstore.json --query "CI Flow" --top-k 2
+
+      - name: Upload RAG artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: rag-index
+          path: rag/
+          if-no-files-found: error

@@ -1,1 +1,27 @@
 # ai-action-test
+
+テスト用リポジトリとして、CI内で軽量RAGパイプラインを構築・検証するための最小構成を用意しています。
+
+## 構成
+- `docs/`: Sentence-TransformersとFAISSでベクトル化するテスト用ドキュメント。
+- `scripts/build_rag_index.py`: Markdownをチャンク化し、FAISSインデックスとメタデータを生成するスクリプト。
+- `scripts/query_rag_index.py`: 生成済みインデックスに対してクエリを投げるためのCLI。
+- `.github/workflows/rag-ci.yml`: GitHub Actionsでの検証ワークフロー。依存関係のインストール、インデックス生成、サンプルクエリの実行、アーティファクトのアップロードを行います。
+- `requirements.txt`: CIで利用するPython依存。
+
+## ローカルでの試験実行
+```bash
+python -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+python scripts/build_rag_index.py --docs docs
+python scripts/query_rag_index.py --query "CI Flow"
+```
+
+これにより`rag/index.faiss`と`rag/docstore.json`が生成され、クエリ結果が出力されます。
+
+## 事前生成済みインデックスの参照
+
+GitHub Actions内でのインデックス再生成が不要な場合は、上記手順でローカル生成した`rag/index.faiss`と`rag/docstore.json`をリポジトリにコミットしておくこともできます。
+
+ワークフローは両ファイルの存在を検出するとビルド処理をスキップし、既存のインデックスをそのままクエリに利用します。大きなモデルを使う負荷が高いケースや、生成結果を固定したい検証時に便利です。
